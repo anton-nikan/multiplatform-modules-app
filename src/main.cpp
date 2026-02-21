@@ -1,7 +1,7 @@
 import platform;
 import application;
-// import render;
-// import resources;
+import render;
+import resources;
 
 import std;
 using namespace std;
@@ -13,10 +13,10 @@ int main(int argc, char** argv) {
 	application::context_handle_t appctx{};
 	application::startup(appctx);
 
-	// render::context rctx{};
-	// appctx.didFinishLaunching = [&] {
-	// 	render::startup(rctx, appctx);
-	// };
+	render::context_handle_t rctx{};
+	application::set_did_finish_launching(appctx, [&] {
+		render::startup(rctx, appctx);
+	});
 
 	// // auto model = resources::load("the_forgotten_knight-2.glb");
 	// // if (!holds_alternative<monostate>(model)) {

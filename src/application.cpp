@@ -1,17 +1,17 @@
 export module application;
 
+import std;
 export import context_handle;
 
+using namespace std;
+
 export namespace application {
-	struct context;
+	extern "C++" struct context;
 	using context_handle_t = t::context_handle_t<context>;
 
 	void startup(context& ctx);
 	void run(context& ctx);
 	void shutdown(context& ctx);
 
-	struct Rect {
-		double x, y, width, height;
-	};
-	Rect get_frame(const context& ctx);
+	void set_did_finish_launching(context& ctx, function<void()> f);
 }

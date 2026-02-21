@@ -10,7 +10,11 @@ module;
 
 module render;
 
+import std;
 import application;
+import application.macos.native;
+
+using namespace std;
 
 constexpr int kMaxFramesInFlight = 3;
 
@@ -75,10 +79,7 @@ namespace render {
 	void startup(context& ctx, application::context& appctx) {
 		ctx._pDevice = MTL::CreateSystemDefaultDevice();
 
-		const CGRect frame = {
-			CGPoint{		 application::get_frame(appctx).x,			 application::get_frame(appctx).y },
-			CGSize{ application::get_frame(appctx).width, application::get_frame(appctx).height }
-		};
+		const CGRect frame = application::native::get_frame(appctx);
 		ctx._pMtkView = MTK::View::alloc()->init(frame, ctx._pDevice);
 		ctx._pMtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
 		ctx._pMtkView->setClearColor(MTL::ClearColor::Make(0.0, 0.0, 1.0, 1.0));
@@ -88,7 +89,7 @@ namespace render {
 		ctx._pViewDelegate = new MyRenderer(ctx._pDevice);
 		ctx._pMtkView->setDelegate(ctx._pViewDelegate);
 
-		appctx._pWindow->setContentView(ctx._pMtkView);
+		application::native::get_window(appctx)->setContentView(ctx._pMtkView);
 	}
 
 	void shutdown(context& ctx) {

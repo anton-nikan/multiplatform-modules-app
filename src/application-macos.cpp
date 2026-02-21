@@ -8,22 +8,13 @@ module;
 module application;
 
 import std;
+import application.macos.native;
+
 using namespace std;
 
 class MyAppDelegate;
 
 namespace application {
-	struct context {
-		const CGRect frame = (CGRect){
-			{	100.0, 100.0 },
-			{ 1024.0, 768.0 }
-		};
-		NS::Application* pSharedApplication = nullptr;
-		NS::Window* _pWindow = nullptr;
-
-		std::function<void()> didFinishLaunching;
-	};
-
 	void startup(context& ctx) {
 		ctx.pSharedApplication = NS::Application::sharedApplication();
 	}
@@ -33,8 +24,8 @@ namespace application {
 	void shutdown(context& ctx) {
 	}
 
-	Rect get_frame(const context& ctx) {
-		return Rect{ .x = ctx.frame.origin.x, .y = ctx.frame.origin.y, .width = ctx.frame.size.width, .height = ctx.frame.size.height };
+	void set_did_finish_launching(context& ctx, function<void()> f) {
+		ctx.didFinishLaunching = f;
 	}
 }
 
@@ -125,14 +116,4 @@ namespace application {
 		ctx.pSharedApplication->setDelegate(&del);
 		ctx.pSharedApplication->run();
 	}
-}
-
-extern "C++" namespace t {
-	template<>
-	template<>
-	context_handle_t<application::context>::context_handle_t() {
-		context_ = make_unique<application::context>();
-	}
-	template<>
-	context_handle_t<application::context>::~context_handle_t() = default;
 }

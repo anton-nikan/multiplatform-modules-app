@@ -9,6 +9,7 @@ set_languages("c++23")
 -- add_requires("metal-cpp")
 
 target("multiplatform-modules-app")
+
 set_kind("binary")
 set_policy("build.c++.modules", true)
 add_includedirs("src", "lib/metal-cpp-extensions", "lib/metal-cpp")
@@ -16,12 +17,19 @@ add_files(
 	"src/main.cpp",
 	"src/context_handle.cpp",
 	"src/platform.cpp",
-	"src/platform-apple.cpp",
 	"src/application.cpp",
-	"src/application-macos.cpp",
 	"src/render.cpp",
-	"src/render-metal.cpp",
 	"src/resources.cpp"
 )
+
+if is_plat("macosx") then
+	add_files(
+		"src/platform-apple.cpp",
+		"src/application-macos.cpp",
+		"src/application-macos-native.cpp",
+		"src/render-metal.cpp"
+	)
+end
+
 -- add_packages("metal-cpp")
 add_frameworks("Metal", "Foundation", "Cocoa", "CoreGraphics", "MetalKit")
