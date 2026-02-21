@@ -1,10 +1,10 @@
-# C++ Modules application
+# C++ Modules application experiment
 
 This project attempts to organize files in such a way that:
 - C++20 Modules are used;
 - it is possible to add new implementations for a single interface (my use case is platform-dependent versions, but may be any other case really);
 - there are no macros to conditionally compile code;
-- there are no includes unless it's module implementation;
+- there are no includes unless it's module implementation (hiding implementation details);
 - build system is the source of truth that selects the right modules to build together.
 
 ## Behaviours, different from conventional header/source
