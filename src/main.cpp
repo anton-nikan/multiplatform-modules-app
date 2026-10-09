@@ -18,10 +18,13 @@ int main(int argc, char** argv) {
 		render::startup(rctx, appctx);
 	};
 
-	// // auto model = resources::load("the_forgotten_knight-2.glb");
-	// // if (!holds_alternative<monostate>(model)) {
-	// // 	println(cout, "loaded!");
-	// // }
+	auto model = resources::load("data/the_forgotten_knight-2.glb");
+	if (model) {
+		println(cout, "loaded!");
+	}
+	else {
+		println(cerr, "{}", model.error());
+	}
 
 	application::run(appctx);
 
