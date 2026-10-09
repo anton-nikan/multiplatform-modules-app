@@ -12,7 +12,7 @@ module render;
 
 import std;
 import application;
-import application.macos.native;
+import application.native;
 
 using namespace std;
 
@@ -70,41 +70,37 @@ private:
 };
 
 namespace render {
-	struct context {
+	struct native_data {
 		MTK::View* _pMtkView = nullptr;
 		MTL::Device* _pDevice = nullptr;
 		MTK::ViewDelegate* _pViewDelegate = nullptr;
 	};
-
 	void startup(context& ctx, application::context& appctx) {
-		ctx._pDevice = MTL::CreateSystemDefaultDevice();
+		auto& n = ctx.native.emplace<native_data>();
+		n._pDevice = MTL::CreateSystemDefaultDevice();
 
-		const CGRect frame = application::native::get_frame(appctx);
-		ctx._pMtkView = MTK::View::alloc()->init(frame, ctx._pDevice);
-		ctx._pMtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
-		ctx._pMtkView->setClearColor(MTL::ClearColor::Make(0.0, 0.0, 1.0, 1.0));
-		ctx._pMtkView->setDepthStencilPixelFormat(MTL::PixelFormat::PixelFormatDepth16Unorm);
-		ctx._pMtkView->setClearDepth(1.0f);
+		const application::rect& r = appctx.frame;
+		const CGRect frame = application::native::make_frame(r.x, r.y, r.width, r.height);
+		n._pMtkView = MTK::View::alloc()->init(frame, n._pDevice);
+		n._pMtkView->setColorPixelFormat(MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB);
+		n._pMtkView->setClearColor(MTL::ClearColor::Make(ctx.clear_color[0], ctx.clear_color[1], ctx.clear_color[2], ctx.clear_color[3]));
+		n._pMtkView->setDepthStencilPixelFormat(MTL::PixelFormat::PixelFormatDepth16Unorm);
+		n._pMtkView->setClearDepth(1.0f);
 
-		ctx._pViewDelegate = new MyRenderer(ctx._pDevice);
-		ctx._pMtkView->setDelegate(ctx._pViewDelegate);
+		n._pViewDelegate = new MyRenderer(n._pDevice);
+		n._pMtkView->setDelegate(n._pViewDelegate);
 
-		application::native::get_window(appctx)->setContentView(ctx._pMtkView);
+		appctx.native.as<application::native::data>()._pWindow->setContentView(n._pMtkView);
 	}
 
 	void shutdown(context& ctx) {
-		ctx._pMtkView->release();
-		ctx._pDevice->release();
-		delete ctx._pViewDelegate;
+		if (!ctx.native.has_value()) {
+			return; // startup never ran
+		}
+		auto& n = ctx.native.as<native_data>();
+		n._pMtkView->release();
+		n._pDevice->release();
+		delete n._pViewDelegate;
+		ctx.native.reset();
 	}
-}
-
-extern "C++" namespace t {
-	template<>
-	template<>
-	context_handle_t<render::context>::context_handle_t() {
-		context_ = make_unique<render::context>();
-	}
-	template<>
-	context_handle_t<render::context>::~context_handle_t() = default;
 }

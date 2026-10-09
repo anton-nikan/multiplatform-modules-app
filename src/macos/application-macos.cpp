@@ -8,7 +8,7 @@ module;
 module application;
 
 import std;
-import application.macos.native;
+import application.native;
 
 using namespace std;
 
@@ -16,16 +16,12 @@ class MyAppDelegate;
 
 namespace application {
 	void startup(context& ctx) {
-		ctx.pSharedApplication = NS::Application::sharedApplication();
+		ctx.native.emplace<native::data>().pSharedApplication = NS::Application::sharedApplication();
 	}
 
 	void run(context& ctx);
 
 	void shutdown(context& ctx) {
-	}
-
-	void set_did_finish_launching(context& ctx, function<void()> f) {
-		ctx.didFinishLaunching = f;
 	}
 }
 
@@ -33,7 +29,13 @@ class MyAppDelegate : public NS::ApplicationDelegate {
 public:
 	MyAppDelegate(application::context& ctx) : _ctx{ ctx } { }
 	~MyAppDelegate() {
-		_ctx._pWindow->release();
+		if (_ctx.native.has_value()) {
+			auto& n = _ctx.native.as<application::native::data>();
+			if (n._pWindow != nullptr) {
+				n._pWindow->release();
+				n._pWindow = nullptr;
+			}
+		}
 	}
 
 	NS::Menu* createMenuBar() {
@@ -85,21 +87,21 @@ public:
 	}
 
 	void applicationDidFinishLaunching(NS::Notification* pNotification) override {
-		_ctx._pWindow = NS::Window::alloc()->init(
-			_ctx.frame,
+		_ctx.native.as<application::native::data>()._pWindow = NS::Window::alloc()->init(
+			application::native::make_frame(_ctx.frame.x, _ctx.frame.y, _ctx.frame.width, _ctx.frame.height),
 			NS::WindowStyleMaskClosable | NS::WindowStyleMaskTitled,
 			NS::BackingStoreBuffered,
 			false);
 
-		_ctx._pWindow->setTitle(NS::String::string("Game", NS::StringEncoding::UTF8StringEncoding));
+		_ctx.native.as<application::native::data>()._pWindow->setTitle(NS::String::string("Game", NS::StringEncoding::UTF8StringEncoding));
 
-		_ctx._pWindow->makeKeyAndOrderFront(nullptr);
+		_ctx.native.as<application::native::data>()._pWindow->makeKeyAndOrderFront(nullptr);
 
 		NS::Application* pApp = reinterpret_cast<NS::Application*>(pNotification->object());
 		pApp->activateIgnoringOtherApps(true);
 
-		if (_ctx.didFinishLaunching) {
-			_ctx.didFinishLaunching();
+		if (_ctx.did_finish_launching) {
+			_ctx.did_finish_launching();
 		}
 	}
 
@@ -113,7 +115,9 @@ private:
 namespace application {
 	void run(context& ctx) {
 		MyAppDelegate del{ ctx };
-		ctx.pSharedApplication->setDelegate(&del);
-		ctx.pSharedApplication->run();
+		ctx.native.as<native::data>().pSharedApplication->setDelegate(&del);
+		ctx.native.as<native::data>().pSharedApplication->run();
+		// The delegate lives on this stack frame, don't leave a dangling pointer behind.
+		ctx.native.as<native::data>().pSharedApplication->setDelegate(nullptr);
 	}
 }

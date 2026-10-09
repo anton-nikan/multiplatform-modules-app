@@ -1,17 +1,25 @@
 export module application;
 
 import std;
-export import context_handle;
+import native_storage;
 
 using namespace std;
 
 export namespace application {
-	extern "C++" struct context;
-	using context_handle_t = t::context_handle_t<context>;
+	struct rect {
+		double x, y, width, height;
+	};
+
+	struct context {
+		// Public part
+		rect frame{ 100.0, 100.0, 1024.0, 768.0 };
+		function<void()> did_finish_launching;
+
+		// Native part: only implementations know the type stored here.
+		native_storage<64> native;
+	};
 
 	void startup(context& ctx);
 	void run(context& ctx);
 	void shutdown(context& ctx);
-
-	void set_did_finish_launching(context& ctx, function<void()> f);
 }

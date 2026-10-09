@@ -6,16 +6,17 @@ else
 end
 
 set_languages("c++23")
+add_cxxflags("-fno-rtti")
 -- add_requires("metal-cpp")
 
 target("multiplatform-modules-app")
 
 set_kind("binary")
 set_policy("build.c++.modules", true)
-add_includedirs("src", "lib/metal-cpp-extensions", "lib/metal-cpp")
+add_includedirs("src")
 add_files(
 	"src/main.cpp",
-	"src/context_handle.cpp",
+	"src/native_storage.cpp",
 	"src/platform.cpp",
 	"src/application.cpp",
 	"src/render.cpp",
@@ -23,12 +24,8 @@ add_files(
 )
 
 if is_plat("macosx") then
-	add_files(
-		"src/platform-apple.cpp",
-		"src/application-macos.cpp",
-		"src/application-macos-native.cpp",
-		"src/render-metal.cpp"
-	)
+	add_includedirs("lib/metal-cpp-extensions", "lib/metal-cpp")
+	add_files("src/macos/*.cpp")
 end
 
 -- add_packages("metal-cpp")

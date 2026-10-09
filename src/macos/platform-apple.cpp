@@ -6,31 +6,25 @@ module;
 module platform;
 
 import std;
-import context_handle;
 
 using namespace std;
 
 namespace platform {
-	struct context {
+	struct native_data {
 		NS::AutoreleasePool* pAutoreleasePool = nullptr;
 	};
 
 	void startup(context& ctx, const vector<string_view>& args) {
 		copy(begin(args), end(args), ostream_iterator<string_view>{ cout, "\n" });
-		ctx.pAutoreleasePool = NS::AutoreleasePool::alloc()->init();
+		ctx.args.assign(begin(args), end(args));
+		ctx.native.emplace<native_data>().pAutoreleasePool = NS::AutoreleasePool::alloc()->init();
 	}
 
 	void shutdown(context& ctx) {
-		ctx.pAutoreleasePool->release();
+		if (!ctx.native.has_value()) {
+			return; // startup never ran
+		}
+		ctx.native.as<native_data>().pAutoreleasePool->release();
+		ctx.native.reset();
 	}
-}
-
-extern "C++" namespace t {
-	template<>
-	template<>
-	context_handle_t<platform::context>::context_handle_t() {
-		context_ = make_unique<platform::context>();
-	}
-	template<>
-	context_handle_t<platform::context>::~context_handle_t() = default;
 }
